@@ -3,11 +3,57 @@
 
 # xclap
 
-[npm scripts] on steroid - an advanced and flexible JavaScript task executor and build tool.
+[npm scripts] on steroids - an advanced, performant, and flexible JavaScript task executor and build tool.
 
 - Run `npm scripts` concurrently or serially
 - Extend `npm scripts` with JavaScript
 - namespace support and more
+
+## Full List of Features
+
+- **_Support [namespaces](./REFERENCE.md#namespace) for tasks._**
+- Load and execute npm scripts from `package.json`.
+- Auto completion for [bash] and [zsh].
+- Define tasks in a JavaScript file.
+- Serial tasks execution.
+- Concurrent tasks execution.
+- Proper nesting task execution hierarchy.
+- Promise, [node.js stream], or callback support for tasks written in JavaScript.
+- Run time flow control - return further tasks to execute from JS task function.
+- Support custom task execution reporter.
+- Specify complex tasks execution pattern from command line.
+- Tasks can have a [_finally_](./REFERENCE.md#finally-hook) hook that always runs after task finish or fail.
+- Support [flexible function task](./REFERENCE.md#function) that can return more tasks to run.
+
+## Table of Contents
+
+- [xclap](#xclap)
+  - [Full List of Features](#full-list-of-features)
+  - [Table of Contents](#table-of-contents)
+  - [Running [npm scripts]](#running-npm-scripts)
+  - [Running JavaScript tasks](#running-javascript-tasks)
+    - [`exec` and shell scripts](#exec-and-shell-scripts)
+    - [Function tasks](#function-tasks)
+    - [Running tasks with `concurrent` and `serial`](#running-tasks-with-concurrent-and-serial)
+    - [Tasks to set `process.env`](#tasks-to-set-processenv)
+    - [And to put it all together](#and-to-put-it-all-together)
+    - [Shorthands](#shorthands)
+  - [Getting Started](#getting-started)
+  - [A Simple Example](#a-simple-example)
+  - [A More Complex Example](#a-more-complex-example)
+  - [Global `clap` command](#global-clap-command)
+  - [TypeScript](#typescript)
+  - [Command Line Usage](#command-line-usage)
+    - [Specifying Complex Tasks from command line](#specifying-complex-tasks-from-command-line)
+  - [Task Name](#task-name)
+  - [Optional Task Execution](#optional-task-execution)
+  - [Task Definition](#task-definition)
+  - [package.json](#packagejson)
+  - [Tasks](#tasks)
+  - [Options](#options)
+  - [Async Tasks](#async-tasks)
+  - [Detailed Reference](#detailed-reference)
+  - [License](#license)
 
 ## Running [npm scripts]
 
@@ -38,28 +84,23 @@ An example `xclap.js`:
 ```js
 const { load, exec, concurrent, serial } = require("xclap");
 load({
-  //
-  // define a task hello, with a string definition
-  // because a string is the task's direct value, it will be executed as a shell command.
-  //
+
+  /* define a task hello, with a string definition - because a string is the task's direct value,
+  it will be executed as a shell command.*/
   hello: "echo hello",
-  //
+  
   // define a task world, using a JavaScript function to print something
-  //
   world: () => console.log("world"),
-  //
-  // define a task serialTask, that will execute the three tasks serially, first two are
-  // the hello and world tasks defined above, and 3rd one is a shell command defined with exec.
-  // because the 3rd one is not a direct value of a task, it has to use exec to define a shell command.
-  //
+  
+  /* define a task serialTask, that will execute the three tasks serially,
+  the first two are the (1) hello and (2) world tasks defined above; the 3rd is a shell command defined with `exec`.
+  Since the 3rd one is not a direct value of a task, it has to use `exec` to define a shell command. */
   serialTask: serial("hello", "world", exec("echo hi from exec")),
-  //
+  
   // define a task concurrentTask, that will execute the three tasks concurrently
-  //
   concurrentTask: concurrent("hello", "world", exec("echo hi from exec")),
-  //
+
   // define a task nesting, that does complex nesting of concurrent/serial constructs
-  //
   nesting: concurrent(serial("hello", "world"), serial("serialTask", concurrent("hello", "world")))
 });
 ```
@@ -186,8 +227,7 @@ load({
       // wait for servers concurrently, and then run tests
       concurrent("wait-mock-server", "wait-app-server"),
       "run-tests",
-      // Finally stop servers and exit.
-      // This is only needed because there are long running servers.
+      // Finally stop servers and exit (as there may be long running servers.)
       () => stop()
     )
   ),
@@ -223,25 +263,9 @@ load({
 });
 ```
 
-## Full List of Features
-
-- **_Support [namespaces](./REFERENCE.md#namespace) for tasks._**
-- Load and execute npm scripts from `package.json`.
-- Auto completion for [bash] and [zsh].
-- Define tasks in a JavaScript file.
-- Serial tasks execution.
-- Concurrent tasks execution.
-- Proper nesting task execution hierarchy.
-- Promise, [node.js stream], or callback support for tasks written in JavaScript.
-- Run time flow control - return further tasks to execute from JS task function.
-- Support custom task execution reporter.
-- Specify complex tasks execution pattern from command line.
-- Tasks can have a [_finally_](./REFERENCE.md#finally-hook) hook that always runs after task finish or fail.
-- Support [flexible function task](./REFERENCE.md#function) that can return more tasks to run.
-
 ## Getting Started
 
-Still reading? OK, maybe you want to take it for a test drive?
+Still reading? Okay, maybe you want to take it for a test drive?
 
 ## A Simple Example
 
@@ -303,9 +327,9 @@ const tasks = {
   },
   both: {
     desc: "invoke tasks hello and jsFunc in serial order",
-    // only array at top level like this is default to serial, other times
-    // they are default to concurrent, or they can be marked explicitly
-    // with the serial and concurrent APIs (below).
+    /* only array at top level like this is default to serial, other times
+       they are default to concurrent, or they can be marked explicitly
+       with the serial and concurrent APIs (as shown below). */
     task: ["hello", "jsFunc"]
   },
   // invoke tasks hello and jsFunc concurrently as a simple concurrent array
